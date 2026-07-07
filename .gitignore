@@ -1,0 +1,19 @@
+# Keil编译生成垃圾
+Objects/
+Listings/
+*.hex
+*.axf
+*.o
+*.map
+*.lst
+*.sct
+*.dep
+
+# VSCode缓存
+.vscode/
+
+# Keil日志、临时文件
+*.uvoptx
+*.uvguix.*
+*.cmd
+*.scvd
