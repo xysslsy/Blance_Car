@@ -4,10 +4,13 @@
 #include "app_button.h"
 #include "app_pwm.h"
 #include "pwm_test.h"
+#include "encoder_test.h"
 
 int main(void)
 {
 	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_0); //设置中断优先级分组为0
+
+	Encoder_Test(); //测试编码器模块
 
 	//Bat_Test(); //测试电池电压检测模块
 
