@@ -7,6 +7,8 @@ static volatile int8_t  direction_l = 0; //左电机编码器的方向，1表示
 static volatile int8_t  direction_r = 0; //右电机编码器的方向，1表示正转，-1表示反转
 static volatile uint64_t t0_l = 0, t1_l = 0;//左电机编码器发生变化的时间，单位是us
 static volatile uint64_t t0_r = 0, t1_r = 0;//右电机编码器发生变化的时间，单位是us
+static float filtered_speed_l = 0.0f; //左轮滤波后的角速度
+static float filtered_speed_r = 0.0f; //右轮滤波后的角速度
 
 static void Encoder_L_Init(void);
 static void Encoder_R_Init(void);
@@ -16,6 +18,9 @@ static void Encoder_R_Init(void);
 //
 void App_Encoder_Init(void)
 {
+    filtered_speed_l = 0.0f;
+    filtered_speed_r = 0.0f;
+
     Encoder_L_Init();
     Encoder_R_Init();
 }
@@ -51,6 +56,7 @@ float App_Encoder_GetSpeed_L(void)
 
     if(direction_cpy == 2 || direction_cpy == -2) //如果发生了方向的改变
     {
+        filtered_speed_l = 0.0f; //无效状态时重置滤波
         return 0.0f; //返回0，表示速度为0
     }
 
@@ -66,7 +72,12 @@ float App_Encoder_GetSpeed_L(void)
         T = (now - t0_cpy) * 1.0e-6f; //计算时间间隔，单位是s
     }
 
-    return direction_cpy / T / 22.0f / (30613.0f / 1500.0f) * 360.0f; //返回角速度值
+    float raw_speed = direction_cpy / T / 22.0f / (30613.0f / 1500.0f) * 360.0f; //原始角速度
+
+    const float alpha = 0.1f; //指数移动平均滤波系数
+    filtered_speed_l = alpha * raw_speed + (1.0f - alpha) * filtered_speed_l;
+
+    return filtered_speed_l; //返回滤波后的角速度值
 }
 
 //
@@ -84,6 +95,7 @@ float App_Encoder_GetSpeed_R(void)
 
     if(direction_cpy == 2 || direction_cpy == -2) //如果发生了方向的改变
     {
+        filtered_speed_r = 0.0f; //无效状态时重置滤波
         return 0.0f; //返回0，表示速度为0
     }
 
@@ -99,7 +111,12 @@ float App_Encoder_GetSpeed_R(void)
         T = (now - t0_cpy) * 1.0e-6f; //计算时间间隔，单位是s
     }
 
-    return direction_cpy / T / 22.0f / (30613.0f / 1500.0f) * 360.0f; //返回角速度值
+    float raw_speed = direction_cpy / T / 22.0f / (30613.0f / 1500.0f) * 360.0f; //原始角速度
+
+    const float alpha = 0.1f; //指数移动平均滤波系数
+    filtered_speed_r = alpha * raw_speed + (1.0f - alpha) * filtered_speed_r;
+
+    return filtered_speed_r; //返回滤波后的角速度值
 }
 
 //
