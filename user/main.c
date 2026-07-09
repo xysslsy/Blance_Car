@@ -10,7 +10,11 @@ int main(void)
 {
 	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_0); //设置中断优先级分组为0
 
-	Encoder_Test(); //测试编码器模块
+	Encoder_T_Method_Test(); //测试编码器的T法测速
+
+	//Encoder_M_Method_Test(); //测试编码器的M法测速
+
+	//Encoder_Test(); //测试编码器模块
 
 	//Bat_Test(); //测试电池电压检测模块
 

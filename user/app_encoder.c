@@ -1,7 +1,12 @@
 #include "app_encoder.h"
+#include "delay.h"
 
 static volatile int64_t encoder_l = 0; //左电机编码器的值
 static volatile int64_t encoder_r = 0; //右电机编码器的值
+static volatile int8_t  direction_l = 0; //左电机编码器的方向，1表示正转，-1表示反转
+static volatile int8_t  direction_r = 0; //右电机编码器的方向，1表示正转，-1表示反转
+static volatile uint64_t t0_l = 0, t1_l = 0;//左电机编码器发生变化的时间，单位是us
+static volatile uint64_t t0_r = 0, t1_r = 0;//右电机编码器发生变化的时间，单位是us
 
 static void Encoder_L_Init(void);
 static void Encoder_R_Init(void);
@@ -16,19 +21,85 @@ void App_Encoder_Init(void)
 }
 
 //
-//@简介：获取左电机编码器的当前位置
+//@简介：获取左轮胎旋转的角度，单位是°
 //
-int64_t App_Encoder_GetPos_L(void)
+float App_Encoder_GetPos_L(void)
 {
-    return encoder_l;
+    return encoder_l / 22.0f / (30613.0f / 1500.0f) * 360.0f; //返回角度值
 }
 
 //
-//@简介：获取右电机编码器的当前位置
+//@简介：获取右轮胎旋转的角度，单位是°
 //
-int64_t App_Encoder_GetPos_R(void)
+float App_Encoder_GetPos_R(void)
 {
-    return encoder_r;
+    return encoder_r / 22.0f / (30613.0f / 1500.0f) * 360.0f; //返回角度值
+}
+
+//
+//@简介：获取左轮胎旋转的角速度，单位是°/s
+//
+float App_Encoder_GetSpeed_L(void)
+{
+    __disable_irq(); //关闭中断，防止在计算速度时发生中断，导致时间不准确
+
+    int8_t direction_cpy = direction_l; //保存当前的方向值
+    uint64_t t0_cpy = t0_l; //保存当前的时间值
+    uint64_t t1_cpy = t1_l; //保存上一次的时间值
+
+    __enable_irq(); //开启中断
+
+    if(direction_cpy == 2 || direction_cpy == -2) //如果发生了方向的改变
+    {
+        return 0.0f; //返回0，表示速度为0
+    }
+
+    uint64_t now = GetUs(); //获取当前时间，单位是us
+    float T = 0.0f; //时间间隔，单位是s
+
+    if(t0_cpy - t1_cpy > now - t0_cpy)
+    {
+        T = (t0_cpy - t1_cpy) * 1.0e-6f; //计算时间间隔，单位是s
+    }
+    else
+    {
+        T = (now - t0_cpy) * 1.0e-6f; //计算时间间隔，单位是s
+    }
+
+    return direction_cpy / T / 22.0f / (30613.0f / 1500.0f) * 360.0f; //返回角速度值
+}
+
+//
+//@简介：获取右轮胎旋转的角速度，单位是°/s
+//
+float App_Encoder_GetSpeed_R(void)
+{
+    __disable_irq(); //关闭中断，防止在计算速度时发生中断，导致时间不准确
+
+    int8_t direction_cpy = direction_r; //保存当前的方向值
+    uint64_t t0_cpy = t0_r; //保存当前的时间值
+    uint64_t t1_cpy = t1_r; //保存上一次的时间值
+
+    __enable_irq(); //开启中断
+
+    if(direction_cpy == 2 || direction_cpy == -2) //如果发生了方向的改变
+    {
+        return 0.0f; //返回0，表示速度为0
+    }
+
+    uint64_t now = GetUs(); //获取当前时间，单位是us
+    float T = 0.0f; //时间间隔，单位是s
+
+    if(t0_cpy - t1_cpy > now - t0_cpy)
+    {
+        T = (t0_cpy - t1_cpy) * 1.0e-6f; //计算时间间隔，单位是s
+    }
+    else
+    {
+        T = (now - t0_cpy) * 1.0e-6f; //计算时间间隔，单位是s
+    }
+
+    return direction_cpy / T / 22.0f / (30613.0f / 1500.0f) * 360.0f; //返回角速度值
 }
 
 //
@@ -125,29 +196,36 @@ static void Encoder_R_Init(void)
     {
         EXTI_ClearFlag(EXTI_Line3); //清除中断标志位
 
+        t1_r = t0_r; //保存上一次的时间
+        t0_r = GetUs(); //获取当前时间，单位是us
+
         uint8_t a = GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_3);  //读取A相的电平
         uint8_t b = GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_4);  //读取B相的电平
 
-        if(a == Bit_SET)  //上升沿
+        if((a ==  Bit_SET && b == Bit_RESET) || (a == Bit_RESET && b == Bit_SET)) //轮胎正转
         {
-            if(b == Bit_SET)  //B相为高电平，说明是正转
+            encoder_r++;
+
+            if(direction_r < 0) //如果之前是反转
             {
-                encoder_r++;
+                direction_r = 2; //表示发生了正转
             }
-            else  //B相为低电平，说明是反转
+            else
             {
-                encoder_r--;
+                direction_r = 1; //正转
             }
         }
-        else  //下降沿
+        else //轮胎反转
         {
-            if(b == Bit_SET)  //B相为高电平，说明是反转
+            encoder_r--;
+
+            if(direction_r > 0) //如果之前是正转
             {
-                encoder_r--;
+                direction_r = -2; //表示发生了反转
             }
-            else  //B相为低电平，说明是正转
+            else
             {
-                encoder_r++;
+                direction_r = -1; //反转
             }
         }
     }
@@ -161,30 +239,37 @@ static void Encoder_R_Init(void)
         {
             EXTI_ClearITPendingBit(EXTI_Line14); //清除中断标志位
 
+            t1_l = t0_l; //保存上一次的时间
+            t0_l = GetUs(); //获取当前时间，单位是us
+
             uint8_t a = GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_14);  //读取A相的电平
             uint8_t b = GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_15);  //读取B相的电平
 
-            if(a == Bit_SET)  //上升沿
+            if((a ==  Bit_SET && b == Bit_RESET) || (a == Bit_RESET && b == Bit_SET)) //轮胎反转
             {
-                if(b == Bit_SET)  //B相为高电平，说明是正转
+                encoder_l--;
+                
+                if(direction_l > 0) //如果之前是正转
                 {
-                    encoder_l++;
+                    direction_l = -2; //表示发生了反转
                 }
-                else  //B相为低电平，说明是反转
+                else
                 {
-                    encoder_l--;
+                    direction_l = -1; //反转
                 }
             }
-            else  //下降沿
+            else //轮胎正转
             {
-                if(b == Bit_SET)  //B相为高电平，说明是反转
+                encoder_l++;
+
+                if(direction_l < 0) //如果之前是反转
                 {
-                    encoder_l--;
+                    direction_l = 2; //表示发生了正转
                 }
-                else  //B相为低电平，说明是正转
+                else
                 {
-                    encoder_l++;
+                    direction_l = 1; //正转
                 }
-            }
+            }          
         }
     }
