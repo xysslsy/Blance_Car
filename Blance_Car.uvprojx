@@ -450,6 +450,16 @@
               <FileType>1</FileType>
               <FilePath>.\user\app_encoder.c</FilePath>
             </File>
+            <File>
+              <FileName>app_mpu6050.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\user\app_mpu6050.h</FilePath>
+            </File>
+            <File>
+              <FileName>app_mpu6050.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\user\app_mpu6050.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -834,6 +844,26 @@
               <FileName>encoder_test.h</FileName>
               <FileType>5</FileType>
               <FilePath>.\test\encoder_test.h</FilePath>
+            </File>
+            <File>
+              <FileName>mpu6050_test.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\test\mpu6050_test.c</FilePath>
+            </File>
+            <File>
+              <FileName>mpu6050_test.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\test\mpu6050_test.h</FilePath>
+            </File>
+            <File>
+              <FileName>qmath_test.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\test\qmath_test.c</FilePath>
+            </File>
+            <File>
+              <FileName>qmath_test.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\test\qmath_test.h</FilePath>
             </File>
           </Files>
         </Group>

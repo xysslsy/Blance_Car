@@ -5,12 +5,20 @@
 #include "app_pwm.h"
 #include "pwm_test.h"
 #include "encoder_test.h"
+#include "mpu6050_test.h"
+#include "qmath_test.h"
 
 int main(void)
 {
 	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_0); //设置中断优先级分组为0
 
-	Encoder_T_Method_Test(); //测试编码器的T法测速
+	QMath_Test(); //测试数学运算的速度
+
+	//MPU6050_Euler_Angle_Test(); //测试MPU6050欧拉角计算
+
+	//MPU6050_Test(); //测试MPU6050模块
+
+	//Encoder_T_Method_Test(); //测试编码器的T法测速
 
 	//Encoder_M_Method_Test(); //测试编码器的M法测速
 
