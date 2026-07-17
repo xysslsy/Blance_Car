@@ -460,6 +460,16 @@
               <FileType>1</FileType>
               <FilePath>.\user\app_mpu6050.c</FilePath>
             </File>
+            <File>
+              <FileName>app_motor.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\user\app_motor.h</FilePath>
+            </File>
+            <File>
+              <FileName>app_motor.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\user\app_motor.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -801,14 +811,14 @@
               <FilePath>.\my_lib\qmath.c</FilePath>
             </File>
             <File>
-              <FileName>pid.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\my_lib\pid.h</FilePath>
-            </File>
-            <File>
               <FileName>pid.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\my_lib\pid.c</FilePath>
+            </File>
+            <File>
+              <FileName>pid.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\my_lib\pid.h</FilePath>
             </File>
           </Files>
         </Group>

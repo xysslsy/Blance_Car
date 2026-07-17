@@ -42,7 +42,7 @@ float App_Encoder_GetPos_R(void)
 }
 
 //
-//@简介：获取左轮胎旋转的角速度，单位是°/s
+//@简介：获取左轮胎旋转的角速度，单位是rad/s
 //
 float App_Encoder_GetSpeed_L(void)
 {
@@ -72,7 +72,7 @@ float App_Encoder_GetSpeed_L(void)
         T = (now - t0_cpy) * 1.0e-6f; //计算时间间隔，单位是s
     }
 
-    float raw_speed = direction_cpy / T / 22.0f / (30613.0f / 1500.0f) * 360.0f; //原始角速度
+    float raw_speed = direction_cpy / T / 22.0f / (30613.0f / 1500.0f) * 6.2831853f; //原始角速度
 
     const float alpha = 0.1f; //指数移动平均滤波系数
     filtered_speed_l = alpha * raw_speed + (1.0f - alpha) * filtered_speed_l;
@@ -81,7 +81,7 @@ float App_Encoder_GetSpeed_L(void)
 }
 
 //
-//@简介：获取右轮胎旋转的角速度，单位是°/s
+//@简介：获取右轮胎旋转的角速度，单位是rad/s
 //
 float App_Encoder_GetSpeed_R(void)
 {
@@ -111,7 +111,7 @@ float App_Encoder_GetSpeed_R(void)
         T = (now - t0_cpy) * 1.0e-6f; //计算时间间隔，单位是s
     }
 
-    float raw_speed = direction_cpy / T / 22.0f / (30613.0f / 1500.0f) * 360.0f; //原始角速度
+    float raw_speed = direction_cpy / T / 22.0f / (30613.0f / 1500.0f) * 6.2831853f; //原始角速度
 
     const float alpha = 0.1f; //指数移动平均滤波系数
     filtered_speed_r = alpha * raw_speed + (1.0f - alpha) * filtered_speed_r;
