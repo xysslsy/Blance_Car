@@ -12,10 +12,15 @@ typedef struct {
     uint64_t t_k_1; // 上一次计算的时间戳
     float err_k_1; // 上一次计算的误差值
     float err_int_k_1; // 上一次计算的积分值
+
+    float UpperLimit; // 输出上限
+    float LowerLimit; // 输出下限
 } PID_TypeDef;
 
 void PID_Init(PID_TypeDef *PID, float Kp, float Ki, float Kd);
 void PID_ChangeSP(PID_TypeDef *PID, float SP);
 float PID_Compute(PID_TypeDef *PID, float FB); 
+void PID_LimitConfig(PID_TypeDef *PID, float Upper, float Lower);
+void PID_Reset(PID_TypeDef *PID);
 
 #endif // PID_H

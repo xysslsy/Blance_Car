@@ -1,6 +1,6 @@
 #include "app_button.h"
 #include "button.h"
-#include "app_pwm.h"
+#include "app_motor.h"
 
 static Button_TypeDef userKey;  //用户按钮
 
@@ -43,7 +43,7 @@ static void OnUserKeyClicked(uint8_t clicks)
         {
             pwm_on = 0; //更新状态标志
         }
-        App_PWM_Cmd(pwm_on); //根据状态标志控制PWM输出
+        App_Motor_Cmd(pwm_on); //根据状态标志控制电机
     }
 }
 

@@ -14,7 +14,9 @@ static PID_TypeDef pid_motor_r; // 右电机PID控制器
 void App_Motor_Init(void)
 {
     PID_Init(&pid_motor_l, 0.5, 7, 0); // 初始化左电机PID控制器
+    PID_LimitConfig(&pid_motor_l, 8.4f, -8.4f); // 设置左电机PID控制器的输出限制
     PID_Init(&pid_motor_r, 0.5, 7, 0); // 初始化右电机PID控制器
+    PID_LimitConfig(&pid_motor_r, 8.4f, -8.4f); // 设置右电机PID控制器的输出限制
 }
 
 //
@@ -59,4 +61,15 @@ void App_Motor_SetOmega_L(float omega)
 void App_Motor_SetOmega_R(float omega)
 {
     PID_ChangeSP(&pid_motor_r, omega); // 设置右电机PID控制器的设定值
+}
+
+//
+//@简介: 控制电机的开关状态
+//@参数: on: 1表示开启电机，0表示关闭电机
+//
+void App_Motor_Cmd(uint8_t on)
+{
+    App_PWM_Cmd(on); // 控制PWM输出的开关状态
+    PID_Reset(&pid_motor_l); // 重置左电机PID控制器的状态变量
+    PID_Reset(&pid_motor_r); // 重置右电机PID控制器的状态变量
 }
