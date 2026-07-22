@@ -12,9 +12,9 @@
 #include "delay.h"
 #include "app_usart2.h"
 #include "task.h"
+#include "app_control.h"
+#include "app_mpu6050.h"
 
-static float targetOmega;
-static void USART2_Proc(void);
 
 int main(void)
 {
@@ -35,27 +35,15 @@ int main(void)
 	App_PWM_Init(); //初始化PWM模块 (TB6612)
 	App_Bat_Init(); //初始化电池电压检测模块
 	App_Motor_Init(); //初始化电机模块 调速系统
+	App_MPU6050_Init(); //初始化MPU6050模块
+	App_Control_Init(); //初始化控制模块
 
 	while(1)
 	{
-		targetOmega = (GetTick() / 1000) % 10 * 2.0f; //目标角速度在0~18rad/s之间变化
-
-		App_Motor_SetOmega_L(targetOmega); //设置左电机的目标角速度
-		App_Motor_SetOmega_R(targetOmega); //设置右电机的目标角速度
-
 		App_Button_Proc(); //按钮模块的任务切片
 		App_Bat_Proc(); //电池电压检测模块的任务切片
 		App_Motor_Proc(); //电机模块的任务切片
-		USART2_Proc(); //串口2模块的任务切片 
+		App_MPU6050_Proc(); //MPU6050模块的任务切片ks
+		App_Control_Proc(); //控制模块的任务切片
 	}
-}
-
-static void USART2_Proc(void)
-{
-	PERIODIC(10) //每10ms执行一次
-
-	float omega_l = App_Encoder_GetSpeed_L(); //获取左轮胎的角速度
-	float omega_r = App_Encoder_GetSpeed_R(); //获取右轮胎的角速度
-
-	My_USART_Printf(USART2, "%.3f, %.3f, %.3f\n", targetOmega, omega_l, omega_r); //打印目标角速度和左右轮胎的角速度
 }
