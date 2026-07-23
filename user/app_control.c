@@ -9,6 +9,7 @@
 static PID_TypeDef pid_velocity; //速度环的PID结构体
 static PID_TypeDef pid_theta; //theta环的PID结构体
 static PID_TypeDef pid_theta_dot; //theta_dot环的PID结构体
+static PID_TypeDef pid_turn; //转向环的PID结构体
 
 static const float g = 9.81f; //重力加速度 m/s^2
 static const float lp = 0.062f; //小车的质心到轮轴的距离 m
@@ -27,6 +28,9 @@ void App_Control_Init(void)
 
     PID_Init(&pid_theta_dot, 10.0f, 10.0f, 0.0f); //初始化theta_dot环的PID结构体
     PID_LimitConfig(&pid_theta_dot, +125.7f, -125.7f); //设置theta_dot环的PID输出上限和下限 rad/s^2
+
+    PID_Init(&pid_turn, 1.0f, 0.0f, 0.0f); //初始化转向环的PID结构体
+    PID_LimitConfig(&pid_turn, +15.0f, -15.0f); //设置转向环的PID输出上限和下限 rad/s
 }
 
 static float omega_ref = 0.0f; //轮胎的角速度 rad/s
@@ -43,7 +47,7 @@ void App_Control_Proc(void)
     float deltaT = (now - last_time) * 1.0e-6f; //计算时间间隔 s
 
     //-1.计算速度环的设定值
-    PID_ChangeSP(&pid_velocity, 0.0f); //设置速度环的PID设定值为0.0rad/s
+   // PID_ChangeSP(&pid_velocity, 0.0f); //设置速度环的PID设定值为0.0rad/s
 
     //-2.读取传感器的数据
     float omega = (App_Encoder_GetSpeed_L() + App_Encoder_GetSpeed_R()) * 0.5f; //获取轮胎的平均角速度 rad/s
@@ -80,9 +84,13 @@ void App_Control_Proc(void)
         omega_ref += 1.0f / rw * x_dot_dot_ref * deltaT; //计算轮胎的目标角速度 rad/s
     }
 
+    // 转向环
+    float gz = App_MPU6050_GetGz() * 0.01745329; //获取陀螺仪的z轴角速度 °/s 转换为 rad/s 的系数为 0.01745329
+    float omega_diff = PID_Compute(&pid_turn, gz); //计算转向环的PID输出,即轮胎的角速度差值 rad/s
+
     //8.将轮胎的目标角速度输出到电机驱动模块
-    App_Motor_SetOmega_L(omega_ref);
-    App_Motor_SetOmega_R(omega_ref);
+    App_Motor_SetOmega_L(omega_ref + omega_diff); //设置左轮胎的目标角速度 rad/s
+    App_Motor_SetOmega_R(omega_ref - omega_diff); //设置右轮胎的目标角速度 rad/s
     last_time = now; //更新上一次计算的时间戳
 }
 
@@ -99,4 +107,22 @@ void App_Control_Reset(void)
     PID_Reset(&pid_velocity); //复位速度环的PID控制器
     PID_Reset(&pid_theta); //复位theta环的PID控制器
     PID_Reset(&pid_theta_dot); //复位theta_dot环的PID控制器
+}
+
+//
+//@简介: 设置平衡车移动的速度
+//@参数： MoveSpeed: 平衡车的移动速度，单位为m/s，最大行进速度0.7m/s
+//
+void App_Control_SetMoveSpeed(float MoveSpeed)
+{
+    PID_ChangeSP(&pid_velocity, MoveSpeed); //设置速度环的PID设定值为MoveSpeed
+}
+
+//
+//@简介: 设置平衡车转向的速度
+//@参数： TurnSpeed: 平衡车的转向速度，单位为rad/s
+//
+void App_Control_SetTurnSpeed(float TurnSpeed)
+{
+    PID_ChangeSP(&pid_turn, TurnSpeed); //设置转向环的PID设定值为TurnSpeed
 }

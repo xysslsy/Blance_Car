@@ -14,6 +14,7 @@
 #include "task.h"
 #include "app_control.h"
 #include "app_mpu6050.h"
+#include "app_rc.h"
 
 
 int main(void)
@@ -37,6 +38,7 @@ int main(void)
 	App_Motor_Init(); //初始化电机模块 调速系统
 	App_MPU6050_Init(); //初始化MPU6050模块
 	App_Control_Init(); //初始化控制模块
+	App_RC_Init(); //初始化遥控模块
 
 	while(1)
 	{
@@ -45,5 +47,6 @@ int main(void)
 		App_Motor_Proc(); //电机模块的任务切片
 		App_MPU6050_Proc(); //MPU6050模块的任务切片ks
 		App_Control_Proc(); //控制模块的任务切片
+		App_RC_Proc(); //遥控模块的任务切片
 	}
 }

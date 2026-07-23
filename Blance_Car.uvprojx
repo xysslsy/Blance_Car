@@ -480,6 +480,16 @@
               <FileType>1</FileType>
               <FilePath>.\user\app_control.c</FilePath>
             </File>
+            <File>
+              <FileName>app_rc.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\user\app_rc.h</FilePath>
+            </File>
+            <File>
+              <FileName>app_rc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\user\app_rc.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
