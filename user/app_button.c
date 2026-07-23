@@ -1,6 +1,7 @@
 #include "app_button.h"
 #include "button.h"
 #include "app_motor.h"
+#include "app_control.h"
 
 static Button_TypeDef userKey;  //用户按钮
 
@@ -34,6 +35,8 @@ static void OnUserKeyClicked(uint8_t clicks)
 {
     if (clicks == 1)
     {
+        App_Control_Reset(); //重置控制模块的状态
+
         //翻转电机状态
         if (pwm_on == 0)
         {
