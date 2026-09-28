@@ -98,14 +98,14 @@ static void TIM2_TRGO_Init(void)
      //1.初始化TIM2_TRGO,每10ms产生一个脉冲
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE); //使能TIM2时钟
     
-    TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
+    TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure; //定义一个TIM_TimeBaseInitTypeDef类型的结构体变量，用于配置定时器的基本参数
 
-    TIM_TimeBaseStructure.TIM_Period = 10000 - 1; //ARR
-    TIM_TimeBaseStructure.TIM_Prescaler = 72 - 1; //PSC
-    TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
-    TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1;
+    TIM_TimeBaseStructure.TIM_Period = 10000 - 1; //设置ARR寄存器的值为10000-1，即计数器计数到10000时产生一个更新事件
+    TIM_TimeBaseStructure.TIM_Prescaler = 72 - 1; //设置预分频器的值为72-1，即计数器的时钟频率为72MHz/72=1MHz，每1us计数器加1
+    TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;//设置计数器为向上计数模式，即从0计数到ARR寄存器的值
+    TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1;//设置时钟分频为1，即不分频
 
-    TIM_TimeBaseInit(TIM2, &TIM_TimeBaseStructure);
+    TIM_TimeBaseInit(TIM2, &TIM_TimeBaseStructure); //用结构体变量初始化TIM2的基本参数
 
     TIM_SelectOutputTrigger(TIM2, TIM_TRGOSource_Update); //选择触发输出源为更新事件
 
@@ -115,7 +115,7 @@ static void TIM2_TRGO_Init(void)
 static void ADC1_Init(void)
 {
      //2.对ADC进行初始化
-    RCC_ADCCLKConfig(RCC_PCLK2_Div6); //ADC时钟为12MHz
+    RCC_ADCCLKConfig(RCC_PCLK2_Div6); //将APB2时钟分频为6，得到ADC时钟为12MHz，确保ADC工作在1~14MHz范围内
 
     //将PB0配置为模拟输入模式
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
@@ -125,23 +125,23 @@ static void ADC1_Init(void)
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0; //PB0
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AIN; //模拟输入
 
-    GPIO_Init(GPIOB, &GPIO_InitStructure);
+    GPIO_Init(GPIOB, &GPIO_InitStructure); //调用配置好的结构体参数，初始化GPIOB
 
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1, ENABLE); //使能ADC1时钟
 
     ADC_InitTypeDef ADC_InitStructure = {0};
 
-    ADC_InitStructure.ADC_Mode = ADC_Mode_Independent; //独立模式
-    ADC_InitStructure.ADC_ContinuousConvMode = DISABLE; //非连续转换模式
-    ADC_InitStructure.ADC_DataAlign = ADC_DataAlign_Right; //右对齐
+    ADC_InitStructure.ADC_Mode = ADC_Mode_Independent; //独立模式，不与ADC2组成双ADC模式
+    ADC_InitStructure.ADC_ContinuousConvMode = DISABLE; //非连续转换模式（只在收到外部触发信号时进行转换）
+    ADC_InitStructure.ADC_DataAlign = ADC_DataAlign_Right; //右对齐（低12位有值，高4位为0）
     ADC_InitStructure.ADC_ExternalTrigConv = ADC_ExternalTrigConv_None; //外部触发转换源为无
     ADC_InitStructure.ADC_NbrOfChannel = 1; //转换通道数
-    ADC_InitStructure.ADC_ScanConvMode = DISABLE; //非扫描模式
+    ADC_InitStructure.ADC_ScanConvMode = DISABLE; //非扫描模式，只转换一个通道
 
     ADC_Init(ADC1, &ADC_InitStructure);
 
-    //设置注入序列的参数
-    ADC_ExternalTrigInjectedConvConfig(ADC1, ADC_ExternalTrigInjecConv_T2_TRGO); //注入序列的外部触发源为TIM2_TRGO
+    //设置注入序列的参数  注入序列有单独的寄存器，不会被覆盖
+    ADC_ExternalTrigInjectedConvConfig(ADC1, ADC_ExternalTrigInjecConv_T2_TRGO); //设置注入序列的外部触发源为TIM2_TRGO
     ADC_ExternalTrigInjectedConvCmd(ADC1, ENABLE); //使能注入序列的外部触发
     ADC_InjectedChannelConfig(ADC1, ADC_Channel_8, 1, ADC_SampleTime_1Cycles5); //设置注入序列的通道为ADC_Channel_8，采样时间为1.5个周期
 
@@ -176,13 +176,13 @@ void ADC1_2_IRQHandler(void)
 {
     if (ADC_GetFlagStatus(ADC1, ADC_FLAG_JEOC) == SET) //判断是否为注入序列转换完成中断
     {
-        ADC_ClearFlag(ADC1, ADC_FLAG_JEOC); //清除中断标志位
+        ADC_ClearFlag(ADC1, ADC_FLAG_JEOC); //清除ADC内部的转换完成标志
 
         uint16_t jdr1 = ADC_GetInjectedConversionValue(ADC1, ADC_InjectedChannel_1); //获取注入序列的转换值
 
         //在这里可以对adc_value进行处理，比如计算电池电压等
         vbat = (float)jdr1 / 4095.0f * 3.3f * 8.4f / 3.3f;
 
-        ADC_ClearITPendingBit(ADC1, ADC_IT_JEOC); //清除中断标志位
+        ADC_ClearITPendingBit(ADC1, ADC_IT_JEOC); //清除NVIC中断控制器的终端挂起标志，可以响应下一次的中断
     }
 }

@@ -62,7 +62,7 @@ void App_PWM_Set_L(float duty)
         GPIO_WriteBit(GPIOA, GPIO_Pin_10, Bit_SET); //向AIN2引脚输出高电平
     }
 
-    uint16_t ccr = duty / 100.0f * 999; //计算捕获/比较寄存器的值
+    uint16_t ccr = duty / 100.0f * 999; //计算捕获/比较寄存器的值   将duty除以100变为百分比的值
 
     TIM_SetCompare1(TIM1, ccr); //设置捕获/比较寄存器的值
 }
@@ -163,10 +163,10 @@ static void Motor_L_Init(void)
     //配置输出比较
     TIM_OCInitTypeDef TIM_OCInitStructure = {0};
 
-    TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1; //选择定时器模式:TIM脉冲宽度调制模式1
-    TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_High; //输出比较极性:TIM输出比较极性高
+    TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1; //CNT < CCR时，OC1输出高电平；CNT > CCR时，OC1输出低电平
+    TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_High; //有效电平为高电平
     TIM_OCInitStructure.TIM_OutputState = ENABLE; //比较输出使能
-    TIM_OCInitStructure.TIM_Pulse = 0; //捕获/比较值
+    TIM_OCInitStructure.TIM_Pulse = 0; //电机初始不转动，设置占空比为0
 
     TIM_OC1Init(TIM1, &TIM_OCInitStructure); //初始化输出比较1
 
